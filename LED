@@ -1,0 +1,61 @@
+import RPi.GPIO as GPIO
+import time
+class Station:
+    def __init__(self, led_pin, button_pin):
+        self.led_pin = led_pin
+        self.button_pin = button_pin
+        self.cup_present = False
+        GPIO.setup(self.led_pin, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(
+            self.button_pin,
+            GPIO.IN,
+            pull_up_down=GPIO.PUD_UP
+        )
+    def read_button(self):
+        """Read button with debounce."""
+        state = GPIO.input(self.button_pin)
+        if state == GPIO.LOW:
+            time.sleep(0.05)  # 50 ms debounce
+            if GPIO.input(self.button_pin) == GPIO.LOW:
+                self.cup_present = True
+                return True
+        self.cup_present = False
+        return False
+    def blink_led(self):
+        """Blink LED once."""
+        GPIO.output(self.led_pin, GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(self.led_pin, GPIO.LOW)
+        time.sleep(0.5)
+    def status(self):
+        """Display current station status."""
+        print(
+            f"Station Status: "
+            f"Cup Present = {self.cup_present}"
+        )
+    def reset(self):
+        """Reset station."""
+        self.cup_present = False
+        GPIO.output(self.led_pin, GPIO.LOW)
+        print("Station reset.")
+def main():
+    GPIO.setmode(GPIO.BCM)
+    LED_PIN = 18
+    BUTTON_PIN = 17
+    station = Station(LED_PIN, BUTTON_PIN)
+    try:
+        while True:
+            if station.read_button():
+                print("Cup detected!")
+                station.blink_led()
+            else:
+                GPIO.output(LED_PIN, GPIO.LOW)
+            station.status()
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("\nProgram stopped.")
+    finally:
+        station.reset()
+        GPIO.cleanup()
+if __name__ == "__main__":
+    main()
