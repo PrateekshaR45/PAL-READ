@@ -1,0 +1,34 @@
+@startuml
+
+title PWM + Limit Switch Homing Firmware
+
+start
+
+:Initialize GPIO;
+:Configure PWM output;
+:Configure limit switch input;
+:Configure Serial UART;
+
+:Start PWM;
+:Print "HOMING_STARTED" over serial;
+
+while (Limit switch triggered?) is (No)
+    :Continue PWM signal;
+    :Motor/Actuator moves toward home;
+endwhile (Yes)
+
+:Limit-switch interrupt occurs;
+
+:Execute homing callback;
+
+:Stop PWM;
+
+:Print "HOMING_COMPLETE" over serial;
+
+:Wait for next command;
+
+stop
+
+@enduml
+
+
