@@ -1,0 +1,56 @@
+import time
+def calculate_checksum(data):
+    checksum = 0
+    for byte in data.encode():
+        checksum ^= byte
+    return f"{checksum:02X}"
+def dispense(canister, target_weight, command_id):
+    payload = (
+        f"CMD,{command_id},DISPENSE,"
+        f"{canister},{target_weight:.1f}"
+    )
+    checksum = calculate_checksum(payload)
+    message = f"{payload},{checksum}"
+    print("RPi -> MCU:", message)
+    time.sleep(1)
+    print("MCU -> RPi:", f"ACK,{command_id}")
+    print("Command acknowledged.")
+    print("\nDispensing...")
+    time.sleep(2)
+    final_weight = 30.4
+    error = final_weight - target_weight
+    response = (
+        f"DONE,{command_id},"
+        f"{final_weight:.2f},"
+        f"{error:.2f}"
+    )
+    print("MCU -> RPi:", response)
+    print("\n----- DISPENSE RESULT -----")
+    print(f"Target   : {target_weight:.2f} g")
+    print(f"Achieved : {final_weight:.2f} g")
+    print(f"Error    : {error:+.2f} g")
+    if abs(error) <= 1:
+        print("Accuracy: PASS")
+    else:
+        print("Accuracy: FAIL")
+if __name__ == "__main__":
+
+    dispense(
+        canister=2,
+        target_weight=30.0,
+        command_id=101
+    )
+
+//output 
+RPi -> MCU: CMD,101,DISPENSE,2,30.0,46
+MCU -> RPi: ACK,101
+Command acknowledged.
+
+Dispensing...
+MCU -> RPi: DONE,101,30.40,0.40
+
+----- DISPENSE RESULT -----
+Target   : 30.00 g
+Achieved : 30.40 g
+Error    : +0.40 g
+Accuracy: PASS
