@@ -1,0 +1,34 @@
+Protein Pal UART Protocol
+
+ Objective
+
+Implement UART communication between Raspberry Pi and MCU
+for dispensing commands.
+
+Communication
+
+RPi → MCU:
+CMD,101,DISPENSE,2,30.0,XX
+
+MCU → RPi:
+ACK,101
+
+After dispensing:
+
+DONE,101,30.40,0.40
+
+ Files
+
+- PROTOCOL.md – UART protocol specification
+- rpi_controller.py – Raspberry Pi Python code
+- mcu_controller.ino – MCU firmware
+
+Protocol Features
+
+- UART communication
+- Command/response design
+- ACK
+- Checksum
+- Timeout handling
+- Error handling
+- Command ID
