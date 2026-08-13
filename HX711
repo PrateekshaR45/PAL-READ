@@ -1,0 +1,110 @@
+import time
+
+# -----------------------------
+# SETTINGS
+# -----------------------------
+TARGET_WEIGHT = 100.0       # grams
+COARSE_PERCENT = 0.90       # 90%
+
+COARSE_TARGET = TARGET_WEIGHT * COARSE_PERCENT
+
+# Adjust these after testing
+COARSE_SPEED = 100
+FINE_SPEED = 30
+
+# -----------------------------
+# HARDWARE FUNCTIONS
+# Replace these with your actual
+# HX711 and motor/valve functions
+# -----------------------------
+
+def read_weight():
+    """
+    Return current load-cell weight in grams.
+    Replace this with your HX711 reading.
+    """
+    # Example:
+    # return hx711.get_weight()
+    return 0.0
+
+
+def set_dosing_speed(speed):
+    """
+    Control pump/valve/motor speed.
+    Replace with your actual GPIO/PWM code.
+    """
+    print(f"Dosing speed = {speed}%")
+
+
+def stop_dosing():
+    """Stop the pump/valve/motor."""
+    print("Dosing stopped")
+
+
+# -----------------------------
+# COARSE-FINE DOSING
+# -----------------------------
+
+def dose(target):
+
+    coarse_target = target * COARSE_PERCENT
+
+    print("\nStarting dosing")
+    print(f"Target = {target:.1f} g")
+    print(f"Coarse target = {coarse_target:.1f} g")
+
+    # -------- COARSE PHASE --------
+    set_dosing_speed(COARSE_SPEED)
+
+    while True:
+        weight = read_weight()
+        print(f"Weight: {weight:.2f} g")
+
+        if weight >= coarse_target:
+            break
+
+        time.sleep(0.1)
+
+    # -------- FINE PHASE --------
+    set_dosing_speed(FINE_SPEED)
+
+    while True:
+        weight = read_weight()
+        print(f"Fine weight: {weight:.2f} g")
+
+        if weight >= target:
+            break
+
+        time.sleep(0.1)
+
+    # -------- STOP --------
+    stop_dosing()
+
+    # Allow the load-cell reading to settle
+    time.sleep(1)
+
+    final_weight = read_weight()
+
+    error = final_weight - target
+
+    if abs(error) <= 1.0:
+        result = "PASS"
+    else:
+        result = "FAIL"
+
+    print("\n----- RESULT -----")
+    print(f"Target   : {target:.2f} g")
+    print(f"Achieved : {final_weight:.2f} g")
+    print(f"Error    : {error:+.2f} g")
+    print(f"Result   : {result}")
+
+    return final_weight, error, result
+
+
+# -----------------------------
+# RUN ONE TEST
+# -----------------------------
+
+if __name__ == "__main__":
+
+    dose(TARGET_WEIGHT)
