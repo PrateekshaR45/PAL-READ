@@ -1,0 +1,104 @@
+import time
+status = {
+    "state": "IDLE",
+    "running": False,
+    "message": "System ready",
+    "cycle": 0
+}
+def update_status(state, message):
+    status["state"] = state
+    status["message"] = message
+    print()
+    print("--------------------------------")
+    print("STATE   :", state)
+    print("MESSAGE :", message)
+    print("--------------------------------")
+def run_cycle():
+    status["running"] = True
+    status["cycle"] += 1
+    print("\n================================")
+    print("   PROTEIN PAL CYCLE STARTED")
+    print("================================")
+    try:
+        # 1. Cup dispensing
+        update_status(
+            "CUP_DISPENSE",
+            "Dispensing cup"
+        )
+        time.sleep(2)
+
+        # 2. Positioning
+        update_status(
+            "POSITION",
+            "Moving to station"
+        )
+        time.sleep(2)
+
+        # 3. Dosing
+        update_status(
+            "DOSE",
+            "Dispensing ingredients"
+        )
+        time.sleep(2)
+
+        # 4. Mixing
+        update_status(
+            "MIX",
+            "Mixing ingredients"
+        )
+        time.sleep(2)
+
+        # 5. Sealing
+        update_status(
+            "SEAL",
+            "Sealing lid"
+        )
+        time.sleep(2)
+
+        # 6. Shaking
+        update_status(
+            "SHAKE",
+            "Shaking product"
+        )
+        time.sleep(2)
+
+        # 7. Delivery
+        update_status(
+            "DELIVER",
+            "Delivering product"
+        )
+        time.sleep(2)
+        # Cycle completed
+        update_status(
+            "IDLE",
+            "Cycle completed successfully"
+        )
+        print("\n================================")
+        print("       CYCLE COMPLETED")
+        print("================================")
+    except Exception as error:
+        update_status(
+            "FAULT",
+            "Cycle failed: " + str(error)
+        )
+        print("\nERROR:", error)
+    finally:
+        status["running"] = False
+def show_status():
+    print("\n========== STATUS ==========")
+    print("State   :", status["state"])
+    print("Running :", status["running"])
+    print("Message :", status["message"])
+    print("Cycle   :", status["cycle"])
+    print("============================")
+print("================================")
+print("      PROTEIN PAL SYSTEM")
+print("================================")
+
+show_status()
+
+print("\nStarting cycle...")
+
+run_cycle()
+
+show_status()
