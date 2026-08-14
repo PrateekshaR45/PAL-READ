@@ -1,0 +1,109 @@
+// Dispence 
+import time
+# Hard safety limit: 10 seconds
+MAX_PUMP_TIME_MS = 10000
+def pump_on(pump_id):
+    print(f"Pump {pump_id} ON")
+def pump_off(pump_id):
+    print(f"Pump {pump_id} OFF")
+def dispenseLiquid(pumpId, durationMs):
+    if durationMs <= 0:
+        raise ValueError("Invalid pump duration")
+    if durationMs > MAX_PUMP_TIME_MS:
+        raise ValueError(
+            f"Duration exceeds safety limit of "
+            f"{MAX_PUMP_TIME_MS} ms"
+        )
+    print()
+    print(f"Starting pump {pumpId}")
+    print(f"Requested duration: {durationMs} ms")
+    start_time = time.monotonic()
+    pump_on(pumpId)
+    try:
+        while True:
+            elapsed_ms = (
+                time.monotonic() - start_time
+            ) * 1000
+            # Requested duration reached
+            if elapsed_ms >= durationMs:
+                break
+            if elapsed_ms >= MAX_PUMP_TIME_MS:
+                raise RuntimeError(
+                    "HARD SAFETY TIMEOUT"
+                )
+            time.sleep(0.01)
+    finally:
+        # Always turn the pump OFF
+        pump_off(pumpId)
+    print("Dispensing completed safely")
+if __name__ == "__main__":
+    print("===== PUMP TEST =====")
+    try:
+        # Pump 1 runs for 3 seconds
+        dispenseLiquid(
+            pumpId=1,
+            durationMs=3000
+        )
+        print()
+        print("TEST RESULT: PASS")
+    except Exception as e:
+        print()
+        print("TEST RESULT: FAIL")
+        print("Error:", e)
+
+
+          
+//SealLid   
+import time
+# Maximum time allowed for lid closing
+LID_TIMEOUT = 5.0
+def lid_motor_close():
+    print("Lid actuator: CLOSE")
+def lid_motor_stop():
+    print("Lid actuator: STOP")
+def lid_closed_sensor():
+    Simulated lid sensor.
+    True  = lid is closed
+    False = lid is open
+    Currently set to False to test
+    the safety timeout.
+    return False
+def sealLid():
+    print("Starting lid sealing sequence")
+    start_time = time.monotonic()
+    lid_motor_close()
+    try:
+        while True:
+            # Check lid feedback
+            if lid_closed_sensor():
+                print("Closed-position sensor detected")
+                lid_motor_stop()
+                time.sleep(0.2)
+                if lid_closed_sensor():
+                    print("Lid successfully sealed")
+                    return True
+                else:
+                    raise RuntimeError(
+                        "Lid feedback lost"
+                    )
+            # Safety timeout
+            if time.monotonic() - start_time > LID_TIMEOUT:
+                raise RuntimeError(
+                    "Lid sealing timeout"
+                )
+            time.sleep(0.05)
+    finally:
+        lid_motor_stop()
+if __name__ == "__main__":
+    print("===== LID SEALING TEST =====")
+    try:
+        result = sealLid()
+        if result:
+            print()
+            print("TEST RESULT: PASS")
+    except Exception as e:
+        print()
+        print("TEST RESULT: FAIL")
+        print("Error:", e)          
+
+          
