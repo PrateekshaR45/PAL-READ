@@ -1,0 +1,106 @@
+import time
+from enum import Enum
+class State(Enum):
+    IDLE = 1
+    HOME = 2
+    CHECK_CUP = 3
+    SEAL_LID = 4
+    MOVE_TO_STATION = 5
+    DISPENSE = 6
+    VERIFY_WEIGHT = 7
+    OPEN_LID = 8
+    COMPLETE = 9
+    FAULT = 10
+class ProteinPalController:
+    def __init__(self):
+        self.state = State.IDLE
+        self.target_weight = 30.0
+        self.final_weight = 0.0
+    def send_mcu_command(self, command):
+        print(f"RPi -> MCU: {command}")
+        time.sleep(0.5)
+        return "OK"
+    def run(self):
+        while True:
+            print(f"\nCurrent state: {self.state.name}")
+            if self.state == State.IDLE:
+                print("System ready")
+                self.state = State.HOME
+            elif self.state == State.HOME:
+                response = self.send_mcu_command("HOME")
+                if response == "OK":
+                    self.state = State.CHECK_CUP
+                else:
+                    self.state = State.FAULT
+            elif self.state == State.CHECK_CUP:
+                print("Checking cup presence...")
+                cup_present = True
+                if cup_present:
+                    self.state = State.SEAL_LID
+                else:
+                    self.state = State.FAULT
+            elif self.state == State.SEAL_LID:
+                response = self.send_mcu_command(
+                    "SEAL_LID"
+                )
+                if response == "OK":
+                    self.state = State.MOVE_TO_STATION
+                else:
+                    self.state = State.FAULT
+            elif self.state == State.MOVE_TO_STATION:
+
+                response = self.send_mcu_command(
+                    "MOVE_STATION,1"
+                )
+                if response == "OK":
+                    self.state = State.DISPENSE
+                else:
+                    self.state = State.FAULT
+            elif self.state == State.DISPENSE:
+                command = (
+                    f"DISPENSE,2,"
+                    f"{self.target_weight}"
+                )
+                response = self.send_mcu_command(command)
+                if response == "OK":
+                    self.final_weight = 30.4
+                    self.state = State.VERIFY_WEIGHT
+                else:
+                    self.state = State.FAULT
+            elif self.state == State.VERIFY_WEIGHT:
+                error = (
+                    self.final_weight -
+                    self.target_weight
+                )
+                print(
+                    f"Target: {self.target_weight} g"
+                )
+                print(
+                    f"Actual: {self.final_weight} g"
+                )
+                print(
+                    f"Error: {error:+.2f} g"
+                )
+                if abs(error) <= 1.0:
+                    self.state = State.OPEN_LID
+                else:
+                    self.state = State.FAULT
+            elif self.state == State.OPEN_LID:
+                response = self.send_mcu_command(
+                    "OPEN_LID"
+                )
+                if response == "OK":
+                    self.state = State.COMPLETE
+                else:
+                    self.state = State.FAULT
+            elif self.state == State.COMPLETE:
+                print("\nDISPENSING COMPLETE")
+                break
+            elif self.state == State.FAULT:
+                print("\nSYSTEM FAULT")
+                print("Stopping operation")
+                self.send_mcu_command("STOP")
+                break
+if __name__ == "__main__":
+    controller = ProteinPalController()
+    controller.run()
